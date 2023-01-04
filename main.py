@@ -12,13 +12,21 @@ except:
     print('Error while connecting to MySQL!')
 
 
-while True:
-    print('please choose one option')
-    print('1: sign up\n2: login\n3: exit')
-    com = int(input())
-    if com == 1:
-        pass
-    elif com == 2:
-        pass
-    elif com == 3:
-        break
+# while True:
+#     print('please choose one option')
+#     print('1: sign up\n2: login\n3: exit')
+#     com = int(input())
+#     if com == 1:
+#         user = input('please enter your username:')
+#         password = input('please enter your password:')
+#         address = input('please enter your address:')
+#         phone = input('please enter your phone:')
+#         email = input('please enter your email:')
+#         bdate = input('please enter your brthdate:')
+
+
+    # elif com == 2:
+    #     pass
+    # elif com == 3:
+    #     break
+
