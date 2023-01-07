@@ -61,6 +61,11 @@ def threeworstcomments():
     comments = cursor.fetchall()
     return jsonify({'comments': comments})
 
-
+@app.route('/suppliercity', methods=['GET'])
+def suppliercity():
+    city = request.args.get('city')
+    cursor.execute('SELECT * FROM supplier where address like %s', ("%{}%".format(city),))
+    suppliers = cursor.fetchall()
+    return jsonify({'suppliers': suppliers})
 
 app.run(debug=True)
