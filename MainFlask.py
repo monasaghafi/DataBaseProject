@@ -108,15 +108,15 @@ def index_top10shoppers_week():
     return json.dumps(out)
 
 
-@app.route('/MinSale')
+@app.route('/MinSale/', methods=['GET'])
 def index_min_sale():
     if isAdmin:
+        pname = request.args.get('pname')
         cursor = mydb.cursor()
         query = 'SELECT product.name, product.price, product.brand, '
         query += 'supplier.id, supplier.name, supplier.phone, Min(product.price) '
         query += 'FROM supplier, supplierproduct, product '
-        query += 'WHERE Supplier_id = supplier.id AND Product_name = product.name '
-        query += 'GROUP BY product.name '
+        query += 'WHERE Supplier_id = supplier.id AND Product_name = product.name AND product.name LIKE "' + pname + '%"'
         cursor.execute(query)
         records = cursor.fetchall()
         out = '<br>'
@@ -172,6 +172,134 @@ def index_same_city():
         out += ' - date: ' + str(r[3])
         out += ' - rate: ' + str(r[4]) + '<br>'
     return json.dumps(out)
+
+
+@app.route('/UserEdit/Delete/', methods=['GET'])
+def index_edit_delete():
+    if isAdmin:
+        cursor = mydb.cursor()
+        id = request.args.get('id', default=None, type=str)
+        password = request.args.get('password', default=None, type=str)
+        name = request.args.get('name', default=None, type=str)
+        address = request.args.get('address', default=None, type=str)
+        phone = request.args.get('phone', default=None, type=str)
+        email = request.args.get('email', default=None, type=str)
+        birthdate = request.args.get('birthdate', default=None, type=str)
+        role = request.args.get('role', default=None, type=str)
+        is_first = True
+        query = 'DELETE FROM user '
+        query += 'WHERE '
+        if id is not None:
+            query += 'id = "' + id + '"'
+            is_first = False
+        if password is not None:
+            query += ('password = "' + password + '"') if is_first else (' AND password = "' + password + '"')
+            is_first = False
+        if name is not None:
+            query += ('name = "' + name + '"') if is_first else (' AND name = "' + name + '"')
+            is_first = False
+        if address is not None:
+            query += ('address = "' + address + '"') if is_first else (' AND address = "' + address + '"')
+            is_first = False
+        if phone is not None:
+            query += ('phone = "' + phone + '"') if is_first else (' AND phone = "' + phone + '"')
+            is_first = False
+        if email is not None:
+            query += ('email = "' + email + '"') if is_first else (' AND email = "' + email + '"')
+            is_first = False
+        if birthdate is not None:
+            query += ('birthdate = "' + birthdate + '"') if is_first else (' AND birthdate = "' + birthdate + '"')
+            is_first = False
+        if role is not None:
+            query += ('role = "' + role + '"') if is_first else (' AND role = "' + role + '"')
+        cursor.execute(query)
+        mydb.commit()
+        return json.dumps('DONE!!!')
+    else:
+        return json.dumps('You Do NOT have the access this page.')
+
+
+@app.route('/UserEdit/Update/', methods=['GET'])
+def index_edit_update():
+    if isAdmin:
+        cursor = mydb.cursor()
+        id = request.args.get('id', default=None, type=str)
+        password = request.args.get('password', default=None, type=str)
+        name = request.args.get('name', default=None, type=str)
+        address = request.args.get('address', default=None, type=str)
+        phone = request.args.get('phone', default=None, type=str)
+        email = request.args.get('email', default=None, type=str)
+        birthdate = request.args.get('birthdate', default=None, type=str)
+        role = request.args.get('role', default=None, type=str)
+        query = 'UPDATE user SET '
+        is_first = True
+        if password is not None:
+            query += ('password = "' + password + '"') if is_first else (', password = "' + password + '"')
+            is_first = False
+        if name is not None:
+            query += ('name = "' + name + '"') if is_first else (', name = "' + name + '"')
+            is_first = False
+        if address is not None:
+            query += ('address = "' + address + '"') if is_first else (', address = "' + address + '"')
+            is_first = False
+        if phone is not None:
+            query += ('phone = "' + phone + '"') if is_first else (', phone = "' + phone + '"')
+            is_first = False
+        if email is not None:
+            query += ('email = "' + email + '"') if is_first else (', email = "' + email + '"')
+            is_first = False
+        if birthdate is not None:
+            query += ('birthdate = "' + birthdate + '"') if is_first else (', birthdate = "' + birthdate + '"')
+            is_first = False
+        if role is not None:
+            query += ('role = "' + role + '"') if is_first else (', role = "' + role + '"')
+        query += ' WHERE id = "' + id + '"'
+        cursor.execute(query)
+        mydb.commit()
+        return json.dumps('DONE!!!')
+    else:
+        return json.dumps('You Do NOT have the access this page.')
+
+
+@app.route('/UserEdit/Add/', methods=['GET'])
+def index_edit_add():
+    if isAdmin:
+        cursor = mydb.cursor()
+        password = request.args.get('password', default='12345', type=str)
+        name = request.args.get('name', default=None, type=str)
+        address = request.args.get('address', default=None, type=str)
+        phone = request.args.get('phone', default=None, type=str)
+        email = request.args.get('email', default=None, type=str)
+        birthdate = request.args.get('birthdate', default=None, type=str)
+        role = request.args.get('role', default=None, type=str)
+        query = 'INSERT INTO user ( password, name'
+        if address is not None:
+            query += ', address'
+        if phone is not None:
+            query += ', phone'
+        if email is not None:
+            query += ', email'
+        if birthdate is not None:
+            query += ', birthdate'
+        query += ', role ) VALUES ( '
+        if password is not None:
+            query += '"' + password + '"'
+        if name is not None:
+            query += ', "' + name + '"'
+        if address is not None:
+            query += ', "' + address + '"'
+        if phone is not None:
+            query += ', "' + phone + '"'
+        if email is not None:
+            query += ', "' + email + '"'
+        if birthdate is not None:
+            query += ', "' + birthdate + '"'
+        query += ', "' + role + '" )'
+        cursor.execute(query)
+        mydb.commit()
+        return json.dumps('DONE!!!')
+    else:
+        return json.dumps('You Do NOT have the access this page.')
 
 
 app.run()

@@ -1,1 +1,0 @@
-# 'select name, price, discount, category, brand from product' Q1
