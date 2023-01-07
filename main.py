@@ -4,10 +4,6 @@ try:
     mydb = mysql.connector.connect(host='localhost', user='root', password='alidev12345', database='mydb')
     if mydb.is_connected():
         cursor = mydb.cursor()
-        cursor.execute('select * from user')
-        records = cursor.fetchall()
-        for r in records:
-            print(r)
 except:
     print('Error while connecting to MySQL!')
 

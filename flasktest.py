@@ -1,31 +1,55 @@
 import mysql.connector
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, session
 
 try:
     mydb = mysql.connector.connect(host='localhost', user='root', password='alidev12345', database='mydb')
+    cursor = mydb.cursor(dictionary=True)
 except:
     print('Error while connecting to MySQL!')
 
 app = Flask(__name__)
+app.secret_key = '4lid3v5ecr3t'
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 
 @app.route('/users')
-def index():
-    cursor = mydb.cursor()
+def getUsers():
     cursor.execute('select * from user')
-
+    print(session)
     #get data and convert to json
     records = cursor.fetchall()
-    fields = cursor.description
-    columns = []
-    for f in fields:
-        columns.append(f[0])
-    jsonData = []
-    for r in records:
-        data_dict = {}
-        for i in range(len(columns)):
-            data_dict[columns[i]] = r[i]
-        jsonData.append(data_dict)
-    return jsonify({'users': jsonData})
-   
-app.run()
+    return jsonify({'users': records})
+
+@app.route('/register', methods=['GET'])
+def register():
+    username = request.args.get('username')
+    password = request.args.get('password')
+    address = request.args.get('address')
+    phone = request.args.get('phone')
+    email = request.args.get('email')
+    bdate = request.args.get('bdate')
+    role = 'user'
+    cursor.execute('SELECT * FROM user WHERE name = %s', (username,))
+    user = cursor.fetchone()
+    if user:
+        return jsonify({'message': 'This username is already exists!'})
+    cursor.execute('INSERT INTO user (password, name, address, phone, email, birthdate, role) VALUES (%s, %s, %s, %s, %s, %s, %s)', (password, username, address, phone, email, bdate, role))
+    mydb.commit()
+    return jsonify({'message': 'user registered successfully!'})
+
+@app.route('/login', methods=['GET'])
+def login():
+    username = request.args.get('username')
+    password = request.args.get('password')
+    cursor.execute('SELECT * FROM user WHERE name = %s and password = %s', (username, password))
+    user = cursor.fetchone()
+    if user:
+        session['logged'] = True
+        session['userid'] = user['id']
+        session['username'] = user['name']
+        session['role'] = user['role']
+        print(session)
+        return jsonify({'message': 'Logged in successfully!'})
+    else:
+        return jsonify({'message': 'username or password is incorrect!'})
+
+app.run(debug=True)
