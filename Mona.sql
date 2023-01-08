@@ -16,4 +16,4 @@ INSERT INTO `mydb`.`comment` (`Customer_user_id`, `Product_name`, `text`, `date`
 
 
 -- ---------------enter users ----------------------
-http://127.0.0.1:5000/login?username=u3&password=12345
+--http://127.0.0.1:5000/login?username=u3&password=12345
