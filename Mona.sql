@@ -12,3 +12,7 @@ UPDATE `mydb`.`comment` SET `rate` = '2' WHERE (`Customer_user_id` = '22') and (
 UPDATE `mydb`.`comment` SET `rate` = '4' WHERE (`Customer_user_id` = '22') and (`Product_name` = 'rice');
 UPDATE `mydb`.`comment` SET `rate` = '7' WHERE (`Customer_user_id` = '23') and (`Product_name` = 'milk');
 INSERT INTO `mydb`.`comment` (`Customer_user_id`, `Product_name`, `text`, `date`, `rate`) VALUES ('25', 'ice-cream', 'SOOOO delicious!!!', '2022-10-18 14:35:34', '10');
+
+
+-- ---------------enter users ----------------------
+http://127.0.0.1:5000/login?username=u3&password=12345
