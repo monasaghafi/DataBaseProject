@@ -80,4 +80,15 @@ def supplierlist():
     else:
         return jsonify({'message': 'You have to login first'})
 
+@app.route('/tenlastorder', methods=['GET'])
+def tenlastorder():
+    if 'logged' in session.keys() and session['logged']:
+        user_id = request.args.get('userid')
+        cursor.execute ('select * from cart,orderitem Where cart.id=orderitem.cart_id and ' + 
+        'cart.customer_user_id = %s order by date DESC limit 10', (user_id,))
+        orders = cursor.fetchall()
+        return jsonify({'tenlastorder': orders})
+    else:
+        return jsonify({'message': 'You have to login first'})
+
 app.run(debug=True)
