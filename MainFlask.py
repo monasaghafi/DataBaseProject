@@ -1,16 +1,19 @@
 import datetime
 import json
 import mysql.connector
-from flask import Flask, request
+from flask import Flask, request, jsonify, session
 
 isAdmin = True
 
 try:
     mydb = mysql.connector.connect(host='localhost', user='root', password='5356600mre', database='mydb')
+    cursor = mydb.cursor(dictionary=True)
 except:
     print('Error while connecting to MySQL!')
 
 app = Flask(__name__)
+app.secret_key = '4lid3v5ecr3t'
+app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 
 
 def last_week():
@@ -47,137 +50,81 @@ def last_month():
 
 @app.route('/products')
 def index_products():
-    cursor = mydb.cursor()
     cursor.execute('select name, price, discount, category, brand from product')
     records = cursor.fetchall()
-    out = '<br>'
-    for r in records:
-        out += 'name: ' + r[0]
-        out += ' - price: ' + str(r[1])
-        out += ' - discount: ' + str(r[2])
-        out += ' - category: ' + r[3]
-        out += ' - brand: ' + r[4] + '<br>'
-    return json.dumps(out)
+    return jsonify({'products': records})
 
 
 @app.route('/Top10Shoppers/Month')
 def index_top10shoppers_month():
-    cursor = mydb.cursor()
     query = 'SELECT distinct user.id, user.name, user.address, user.phone, count(user.id) as number_of_purchases '
     query += 'FROM cart, user '
     query += 'WHERE cart.Customer_user_id = user.id and '
     query += 'date < "' + str(datetime.date.today()) + '" and date > "' + last_month() + '" '
     query += 'GROUP BY user.id '
-    query += 'ORDER BY number_of_purchases DESC'
+    query += 'ORDER BY number_of_purchases DESC '
+    query += 'LIMIT 10'
     cursor.execute(query)
     records = cursor.fetchall()
-    out = '<br>'
-    num = 0
-    for r in records:
-        if num != 10:
-            out += 'id: ' + str(r[0])
-            out += ' - name: ' + str(r[1])
-            out += ' - address: ' + str(r[2])
-            out += ' - phone: ' + str(r[3])
-            out += ' - number_of_purchases: ' + str(r[4]) + '<br>'
-            num += 1
-    return json.dumps(out)
+    return jsonify({'Top 10 Shoppers Of The Month': records})
 
 
 @app.route('/Top10Shoppers/Week')
 def index_top10shoppers_week():
-    cursor = mydb.cursor()
     query = 'SELECT distinct user.id, user.name, user.address, user.phone, count(user.id) as number_of_purchases '
     query += 'FROM cart, user '
     query += 'WHERE cart.Customer_user_id = user.id and '
     query += 'date < "' + str(datetime.date.today()) + '" and date > "' + last_week() + '" '
     query += 'GROUP BY user.id '
-    query += 'ORDER BY number_of_purchases DESC'
+    query += 'ORDER BY number_of_purchases DESC '
+    query += 'LIMIT 10'
     cursor.execute(query)
     records = cursor.fetchall()
-    out = '<br>'
-    num = 0
-    for r in records:
-        if num != 10:
-            out += 'id: ' + str(r[0])
-            out += ' - name: ' + str(r[1])
-            out += ' - address: ' + str(r[2])
-            out += ' - phone: ' + str(r[3])
-            out += ' - number_of_purchases: ' + str(r[4]) + '<br>'
-            num += 1
-    return json.dumps(out)
+    return jsonify({'Top 10 Shoppers Of The Week': records})
 
 
 @app.route('/MinSale/', methods=['GET'])
 def index_min_sale():
     if isAdmin:
         pname = request.args.get('pname')
-        cursor = mydb.cursor()
         query = 'SELECT product.name, product.price, product.brand, '
         query += 'supplier.id, supplier.name, supplier.phone, Min(product.price) '
         query += 'FROM supplier, supplierproduct, product '
-        query += 'WHERE Supplier_id = supplier.id AND Product_name = product.name AND product.name LIKE "' + pname + '%"'
+        query += 'WHERE Supplier_id = supplier.id AND Product_name = product.name AND product.name LIKE "' + pname + '-%"'
         cursor.execute(query)
         records = cursor.fetchall()
-        out = '<br>'
-        for r in records:
-            out += 'name: ' + str(r[0])
-            out += ' - price: ' + str(r[1])
-            out += ' - brand: ' + str(r[2])
-            out += ' - supplier.id: ' + str(r[3])
-            out += ' - supplier.name: ' + str(r[4])
-            out += ' - supplier.phone: ' + str(r[5]) + '<br>'
+        return jsonify({'MinSale': records})
     else:
-        out = 'You Do NOT have the access this page.'
-    return json.dumps(out)
+        return jsonify({'error': 'You Do NOT have the access this page.'})
 
 
 @app.route('/Top3Comments/', methods=['GET'])
 def index_top3comments():
     pname = request.args.get('pname')
-    cursor = mydb.cursor()
     query = 'SELECT name, Product_name, text, date, rate '
     query += 'FROM comment, user '
     query += 'WHERE Product_name = "' + pname + '" AND user.id = Customer_user_id '
     query += 'ORDER BY rate DESC '
+    query += 'LIMIT 3'
     cursor.execute(query)
     records = cursor.fetchall()
-    out = '<br>'
-    num = 0
-    for r in records:
-        if num != 3:
-            out += 'name: ' + str(r[0])
-            out += ' - product name: ' + str(r[1])
-            out += ' - text: ' + str(r[2])
-            out += ' - date: ' + str(r[3])
-            out += ' - rate: ' + str(r[4]) + '<br>'
-            num += 1
-    return json.dumps(out)
+    return jsonify({'Top 3 Comments': records})
 
 
 @app.route('/SameCity/', methods=['GET'])
 def index_same_city():
     city = request.args.get('city')
-    cursor = mydb.cursor()
     query = 'SELECT id, name, address, phone, email, birthdate '
     query += 'FROM user '
     query += 'WHERE address LIKE "%' + city + '%" '
     cursor.execute(query)
     records = cursor.fetchall()
-    out = '<br>'
-    for r in records:
-        out += 'name: ' + str(r[0])
-        out += ' - product name: ' + str(r[1])
-        out += ' - text: ' + str(r[2])
-        out += ' - date: ' + str(r[3])
-        out += ' - rate: ' + str(r[4]) + '<br>'
-    return json.dumps(out)
+    return jsonify({'Users In Same City': records})
 
 
 @app.route('/UserEdit/Delete/', methods=['GET'])
 def index_edit_delete():
     if isAdmin:
-        cursor = mydb.cursor()
         id = request.args.get('id', default=None, type=str)
         password = request.args.get('password', default=None, type=str)
         name = request.args.get('name', default=None, type=str)
@@ -214,15 +161,14 @@ def index_edit_delete():
             query += ('role = "' + role + '"') if is_first else (' AND role = "' + role + '"')
         cursor.execute(query)
         mydb.commit()
-        return json.dumps('DONE!!!')
+        return jsonify({'Admin Delete': 'DONE.'})
     else:
-        return json.dumps('You Do NOT have the access this page.')
+        return jsonify({'Admin Delete': 'You Do NOT have the access this page.'})
 
 
 @app.route('/UserEdit/Update/', methods=['GET'])
 def index_edit_update():
     if isAdmin:
-        cursor = mydb.cursor()
         id = request.args.get('id', default=None, type=str)
         password = request.args.get('password', default=None, type=str)
         name = request.args.get('name', default=None, type=str)
@@ -256,15 +202,14 @@ def index_edit_update():
         query += ' WHERE id = "' + id + '"'
         cursor.execute(query)
         mydb.commit()
-        return json.dumps('DONE!!!')
+        return jsonify({'Admin Update': 'DONE.'})
     else:
-        return json.dumps('You Do NOT have the access this page.')
+        return jsonify({'Admin Update': 'You Do NOT have the access this page.'})
 
 
 @app.route('/UserEdit/Add/', methods=['GET'])
 def index_edit_add():
     if isAdmin:
-        cursor = mydb.cursor()
         password = request.args.get('password', default='12345', type=str)
         name = request.args.get('name', default=None, type=str)
         address = request.args.get('address', default=None, type=str)
@@ -297,9 +242,9 @@ def index_edit_add():
         query += ', "' + role + '" )'
         cursor.execute(query)
         mydb.commit()
-        return json.dumps('DONE!!!')
+        return jsonify({'Admin Add': 'DONE.'})
     else:
-        return json.dumps('You Do NOT have the access this page.')
+        return jsonify({'Admin Add': 'You Do NOT have the access this page.'})
 
 
 app.run()
