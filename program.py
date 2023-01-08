@@ -1,3 +1,4 @@
+import datetime
 import mysql.connector
 from flask import Flask, jsonify, request, session
 
@@ -10,6 +11,19 @@ except:
 app = Flask(__name__)
 app.secret_key = '4lid3v5ecr3t'
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
+
+def last_month():
+    today = datetime.date.today()
+    out = ""
+    if int(today.month) == 1:
+        out += str(int(today.year) - 1) + '-'
+        out += '12-'
+        out += str(today.day) if int(today.day) > 9 else ('0' + str(today.day))
+    else:
+        out += str(today.year) + '-'
+        out += str(int(today.month) - 1) if int(today.month) > 10 else ('0' + str(int(today.month) - 1)) + '-'
+        out += str(today.day) if int(today.day) > 9 else ('0' + str(today.day))
+    return out
 
 @app.route('/users')
 def getUsers():
@@ -61,5 +75,13 @@ def getCategory():
     category = cursor.fetchall()
     return jsonify({'category': category})
 
+# @app.route('/categories', methods=['GET'])
+# def avgSoldMonth():
 
+@app.route('/editProducts', methods=['GET'])
+def editProduct():
+     if 'logged' not in session.keys() or not session['logged']: #حالتی که یوزر لاگین نشده
+        return jsonify ({'message':'please login first!'})
+    elif 'logged' in session.keys() or session['logged'] and session['role'] == 'superuser':
+        
 app.run(debug=True)
