@@ -1,5 +1,4 @@
 import datetime
-import json
 import mysql.connector
 from flask import Flask, request, jsonify, session
 
@@ -83,14 +82,14 @@ def index_top10shoppers_week():
     return jsonify({'Top 10 Shoppers Of The Week': records})
 
 
-@app.route('/MinSale/', methods=['GET'])
+@app.route('/MinSale', methods=['GET'])
 def index_min_sale():
-    if isAdmin:
+    if 'logged' in session.keys() and session['logged'] and session['role'] == 'superuser':
         pname = request.args.get('pname')
         query = 'SELECT product.name, product.price, product.brand, '
         query += 'supplier.id, supplier.name, supplier.phone, Min(product.price) '
         query += 'FROM supplier, supplierproduct, product '
-        query += 'WHERE Supplier_id = supplier.id AND Product_name = product.name AND product.name LIKE "' + pname + '-%"'
+        query += 'WHERE Supplier_id = supplier.id AND Product_name = product.name AND product.name LIKE "' + pname + '%"'
         cursor.execute(query)
         records = cursor.fetchall()
         return jsonify({'MinSale': records})
@@ -111,7 +110,7 @@ def index_top3comments():
     return jsonify({'Top 3 Comments': records})
 
 
-@app.route('/SameCity/', methods=['GET'])
+@app.route('/SameCity', methods=['GET'])
 def index_same_city():
     city = request.args.get('city')
     query = 'SELECT id, name, address, phone, email, birthdate '
@@ -122,9 +121,9 @@ def index_same_city():
     return jsonify({'Users In Same City': records})
 
 
-@app.route('/UserEdit/Delete/', methods=['GET'])
+@app.route('/UserEdit/Delete', methods=['GET'])
 def index_edit_delete():
-    if isAdmin:
+    if 'logged' in session.keys() and session['logged'] and session['role'] == 'superuser':
         id = request.args.get('id', default=None, type=str)
         password = request.args.get('password', default=None, type=str)
         name = request.args.get('name', default=None, type=str)
@@ -166,9 +165,9 @@ def index_edit_delete():
         return jsonify({'Admin Delete': 'You Do NOT have the access this page.'})
 
 
-@app.route('/UserEdit/Update/', methods=['GET'])
+@app.route('/UserEdit/Update', methods=['GET'])
 def index_edit_update():
-    if isAdmin:
+    if 'logged' in session.keys() and session['logged'] and session['role'] == 'superuser':
         id = request.args.get('id', default=None, type=str)
         password = request.args.get('password', default=None, type=str)
         name = request.args.get('name', default=None, type=str)
@@ -207,9 +206,9 @@ def index_edit_update():
         return jsonify({'Admin Update': 'You Do NOT have the access this page.'})
 
 
-@app.route('/UserEdit/Add/', methods=['GET'])
+@app.route('/UserEdit/Add', methods=['GET'])
 def index_edit_add():
-    if isAdmin:
+    if 'logged' in session.keys() and session['logged'] and session['role'] == 'superuser':
         password = request.args.get('password', default='12345', type=str)
         name = request.args.get('name', default=None, type=str)
         address = request.args.get('address', default=None, type=str)
@@ -245,6 +244,41 @@ def index_edit_add():
         return jsonify({'Admin Add': 'DONE.'})
     else:
         return jsonify({'Admin Add': 'You Do NOT have the access this page.'})
+
+
+@app.route('/register', methods=['GET'])
+def register():
+    username = request.args.get('username')
+    password = request.args.get('password')
+    address = request.args.get('address')
+    phone = request.args.get('phone')
+    email = request.args.get('email')
+    bdate = request.args.get('bdate')
+    role = 'user'
+    cursor.execute('SELECT * FROM user WHERE name = %s', (username,))
+    user = cursor.fetchone()
+    if user:
+        return jsonify({'message': 'This username is already exists!'})
+    cursor.execute('INSERT INTO user (password, name, address, phone, email, birthdate, role) VALUES (%s, %s, %s, %s, %s, %s, %s)', (password, username, address, phone, email, bdate, role))
+    mydb.commit()
+    return jsonify({'message': 'user registered successfully!'})
+
+
+@app.route('/login', methods=['GET'])
+def login():
+    username = request.args.get('username')
+    password = request.args.get('password')
+    cursor.execute('SELECT * FROM user WHERE name = %s and password = %s', (username, password))
+    user = cursor.fetchone()
+    if user:
+        session['logged'] = True
+        session['userid'] = user['id']
+        session['username'] = user['name']
+        session['role'] = user['role']
+        print(session)
+        return jsonify({'message': 'Logged in successfully!'})
+    else:
+        return jsonify({'message': 'username or password is incorrect!'})
 
 
 app.run()
