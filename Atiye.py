@@ -73,8 +73,9 @@ def orderlist():
 def supplierlist():
     if 'logged' in session.keys() and session['logged'] and session['role'] == 'superuser':
         productname = request.args.get('productname')
-        cursor.execute ('select supplier.name, supplier.phone, supplier.address from supplier,supplierproduct' + 
-        ' where supplier.id = supplierproduct.Supplier_id and supplierproduct.Product_name = %s', (productname,))
+        cursor.execute ('select supplier.name, supplier.phone, supplier.address from ' + 
+        'supplier,supplierproduct where supplier.id = supplierproduct.Supplier_id and ' + 
+        'supplierproduct.Product_name = %s', (productname,))
         productname = cursor.fetchall()
         return jsonify({'productname': productname})
     else:
@@ -91,4 +92,11 @@ def tenlastorder():
     else:
         return jsonify({'message': 'You have to login first'})
 
+@app.route('/productcomments', methods=['GET'])
+def productcomments():
+    pname = request.args.get('pname')
+    cursor.execute('SELECT * FROM comment where product_name = %s', (pname,))
+    comments = cursor.fetchall()
+    return jsonify({'comments': comments})
+    
 app.run(debug=True)
