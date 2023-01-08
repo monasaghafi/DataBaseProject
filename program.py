@@ -53,7 +53,13 @@ def login():
         return jsonify({'message': 'Logged in successfully!'})
     else:
         return jsonify({'message': 'username or password is incorrect!'})
-    
+
+@app.route('/categories', methods=['GET'])
+def getCategory():
+    #select distinct category from product
+    cursor.execute('select distinct category from product')
+    category = cursor.fetchall()
+    return jsonify({'category': category})
 
 
 app.run(debug=True)
