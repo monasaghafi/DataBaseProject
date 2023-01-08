@@ -13,7 +13,7 @@ app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 
 @app.route('/users')
 def getUsers():
-    if 'logged' not in session.keys() or not session['logged']:
+    if not session['logged']:
         return jsonify({'message': 'You have to login first!'})
     else:
         cursor.execute('select name, email, address, phone, birthdate, role from user')
@@ -53,5 +53,19 @@ def login():
         return jsonify({'message': 'Logged in successfully!'})
     else:
         return jsonify({'message': 'username or password is incorrect!'})
-
+@app.route('/orderlist', methods=['GET'])
+def orderlist():
+    if 'logged' in session.keys() and session['logged'] and session['role'] == 'superuser':
+        cursor.execute('select * from cart,orderitem Where cart.id=orderitem.cart_id ')
+        orders = cursor.fetchall()
+        return jsonify({'orderlist': orders})
+    elif 'logged' in session.keys() and session['logged'] and session['role'] == 'user':
+        user_id = request.args.get('userid')
+        cursor.execute('select * from cart,orderitem Where '
+        +'cart.id=orderitem.cart_id and cart.customer_user_id = %s', (user_id,))
+        orders = cursor.fetchall()
+        return jsonify({'orderlist': orders})
+    else:
+        return jsonify({'message': 'You have to login first'})
+    
 app.run(debug=True)
