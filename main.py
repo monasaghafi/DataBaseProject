@@ -16,10 +16,13 @@ def getUsers():
     if 'logged' not in session.keys() or not session['logged']:
         return jsonify({'message': 'You have to login first!'})
     else:
-        cursor.execute('select name, email, address, phone, birthdate, role from user')
-        #get data and convert to json
-        records = cursor.fetchall()
-        return jsonify({'users': records})
+        if session['role'] == 'superuser':
+            cursor.execute('select name, email, address, phone, birthdate, role from user')
+            #get data and convert to json
+            records = cursor.fetchall()
+            return jsonify({'users': records})
+        else:
+            return jsonify({'message': 'Only admins can see users info!'})
 
 @app.route('/register', methods=['GET'])
 def register():
@@ -54,18 +57,28 @@ def login():
     else:
         return jsonify({'message': 'username or password is incorrect!'})
     
-@app.route('/threeworstcomments', methods=['GET'])
+@app.route('/logout', methods=['GET'])
+def logout():
+    if 'logged' in session.keys() and session['logged']:
+        session['logged'] = False
+        return jsonify({'message': 'Logged out successfully!'})
+    else:
+        return jsonify({'message': 'You are already logged out!'})
+    
+@app.route('/three-worst-comments', methods=['GET'])
 def threeworstcomments():
     pname = request.args.get('pname')
-    cursor.execute('SELECT user.name, comment.text, comment.rate FROM comment, product, user where comment.Product_name = product.name and comment.Customer_user_id = user.id and product.name = %s order by comment.rate limit 3', (pname,))
+    cursor.execute('SELECT user.name, comment.text, comment.date, comment.rate FROM comment, user where comment.Customer_user_id = user.id and comment.Product_name = %s order by comment.rate limit 3', (pname,))
     comments = cursor.fetchall()
     return jsonify({'comments': comments})
 
-@app.route('/suppliercity', methods=['GET'])
+@app.route('/supplier-city', methods=['GET'])
 def suppliercity():
     city = request.args.get('city')
     cursor.execute('SELECT * FROM supplier where address like %s', ("%{}%".format(city),))
     suppliers = cursor.fetchall()
     return jsonify({'suppliers': suppliers})
+
+
 
 app.run(debug=True)
