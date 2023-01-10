@@ -85,6 +85,10 @@ def lastmonthproducts():
     products = cursor.fetchall()
     return jsonify({'products': products})
 
-
+@app.route('/most-product-last-week', methods=['GET'])
+def lastweekproducts():
+    cursor.execute('SELECT sum(quantity), product_name FROM cart, orderitem WHERE cart.id = orderitem.cart_id and is_paid = 1 and date between date_sub(now(), INTERVAL 1 WEEK) and now() group by product_name order by sum(quantity) desc')
+    products = cursor.fetchall()
+    return jsonify({'products': products})
 
 app.run(debug=True)
