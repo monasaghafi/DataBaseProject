@@ -97,7 +97,7 @@ def index_min_sale():
         return jsonify({'error': 'You Do NOT have the access this page.'})
 
 
-@app.route('/Top3Comments/', methods=['GET'])
+@app.route('/Top3Comments', methods=['GET'])
 def index_top3comments():
     pname = request.args.get('pname')
     query = 'SELECT name, Product_name, text, date, rate '
@@ -131,7 +131,6 @@ def index_edit_delete():
         phone = request.args.get('phone', default=None, type=str)
         email = request.args.get('email', default=None, type=str)
         birthdate = request.args.get('birthdate', default=None, type=str)
-        role = request.args.get('role', default=None, type=str)
         is_first = True
         query = 'DELETE FROM user '
         query += 'WHERE '
@@ -155,9 +154,7 @@ def index_edit_delete():
             is_first = False
         if birthdate is not None:
             query += ('birthdate = "' + birthdate + '"') if is_first else (' AND birthdate = "' + birthdate + '"')
-            is_first = False
-        if role is not None:
-            query += ('role = "' + role + '"') if is_first else (' AND role = "' + role + '"')
+        query += 'role = "user"' if is_first else ' AND role = "user"'
         cursor.execute(query)
         mydb.commit()
         return jsonify({'Admin Delete': 'DONE.'})
@@ -175,7 +172,6 @@ def index_edit_update():
         phone = request.args.get('phone', default=None, type=str)
         email = request.args.get('email', default=None, type=str)
         birthdate = request.args.get('birthdate', default=None, type=str)
-        role = request.args.get('role', default=None, type=str)
         query = 'UPDATE user SET '
         is_first = True
         if password is not None:
@@ -195,10 +191,7 @@ def index_edit_update():
             is_first = False
         if birthdate is not None:
             query += ('birthdate = "' + birthdate + '"') if is_first else (', birthdate = "' + birthdate + '"')
-            is_first = False
-        if role is not None:
-            query += ('role = "' + role + '"') if is_first else (', role = "' + role + '"')
-        query += ' WHERE id = "' + id + '"'
+        query += ' WHERE id = "' + id + '" And role = "user" '
         cursor.execute(query)
         mydb.commit()
         return jsonify({'Admin Update': 'DONE.'})
