@@ -50,7 +50,6 @@ def login():
     if user:
         session['logged'] = True
         session['userid'] = user['id']
-        session['username'] = user['name']
         session['role'] = user['role']
         print(session)
         return jsonify({'message': 'Logged in successfully!'})
@@ -64,6 +63,45 @@ def logout():
         return jsonify({'message': 'Logged out successfully!'})
     else:
         return jsonify({'message': 'You are already logged out!'})
+    
+@app.route('/edit-profile', methods=['GET'])
+def editprofile():
+    if 'logged' in session.keys() and session['logged']:
+        try:
+            password = request.args.get('password', default=None, type=str)
+            name = request.args.get('username', default=None, type=str)
+            address = request.args.get('address', default=None, type=str)
+            phone = request.args.get('phone', default=None, type=str)
+            email = request.args.get('email', default=None, type=str)
+            birthdate = request.args.get('birthdate', default=None, type=str)
+            query = 'UPDATE user SET '
+            is_first = True
+            if password is not None:
+                query += ('password = "' + password + '"') if is_first else (', password = "' + password + '"')
+                is_first = False
+            if name is not None:
+                query += ('name = "' + name + '"') if is_first else (', name = "' + name + '"')
+                is_first = False
+            if address is not None:
+                query += ('address = "' + address + '"') if is_first else (', address = "' + address + '"')
+                is_first = False
+            if phone is not None:
+                query += ('phone = "' + phone + '"') if is_first else (', phone = "' + phone + '"')
+                is_first = False
+            if email is not None:
+                query += ('email = "' + email + '"') if is_first else (', email = "' + email + '"')
+                is_first = False
+            if birthdate is not None:
+                query += ('birthdate = "' + birthdate + '"') if is_first else (', birthdate = "' + birthdate + '"')
+                is_first = False
+            query += ' WHERE id = "' + str(session['userid']) + '"'
+            cursor.execute(query)
+            mydb.commit()
+        except:
+            return jsonify({'message': 'Please enter correct info!'})
+        return jsonify({'message': 'Your info edited successfully!'})
+    else:
+        return jsonify({'message': 'You have to login first!'})
     
 @app.route('/three-worst-comments', methods=['GET'])
 def threeworstcomments():
