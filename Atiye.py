@@ -98,8 +98,6 @@ def productcomments():
     cursor.execute('SELECT * FROM comment where product_name = %s', (pname,))
     comments = cursor.fetchall()
     return jsonify({'comments': comments})
-    
-app.run(debug=True)
 
 @app.route('/productlist', methods=['GET'])
 def productlist():
@@ -112,5 +110,5 @@ def productlist():
         return jsonify({'productlist': productlist})
     else:
         return jsonify({'message': 'You have to login first'})
-        
+
 app.run(debug=True)
