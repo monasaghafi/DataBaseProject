@@ -100,3 +100,17 @@ def productcomments():
     return jsonify({'comments': comments})
     
 app.run(debug=True)
+
+@app.route('/productlist', methods=['GET'])
+def productlist():
+    if 'logged' in session.keys() and session['logged'] and session['role'] == 'superuser':
+        productname = request.args.get('productname')
+        cursor.execute('SELECT Product_name, sum(total), sum(quantity) from orderitem,cart' +
+        'where Product_name=%s and is_paid=1 and Cart_id=cart.id and date between date_sub(now(),' +
+        'INTERVAL 1 month) and now()', (productname,))
+        productname = cursor.fetchall()
+        return jsonify({'productlist': productlist})
+    else:
+        return jsonify({'message': 'You have to login first'})
+        
+app.run(debug=True)
