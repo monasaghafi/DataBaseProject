@@ -2,7 +2,8 @@
 select distinct category from product;
 select * from product where discount > 14;
 select * from comment;   -- esme moshtari ham gofte beshe
-select avg(total_price)from cart where is_paid=1;
+select avg(total_price)from cart where
+ is_paid=1 and date between date_sub(now(), INTERVAL 1 MONTH) and now();
 
 -- ---------------Update Tables----------------------
 ALTER TABLE `mydb`.`comment` 
