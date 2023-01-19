@@ -34,7 +34,8 @@ def register():
     user = cursor.fetchone()
     if user:
         return jsonify({'message': 'This username is already exists!'})
-    cursor.execute('INSERT INTO user (password, name, address, phone, email, birthdate, role) VALUES (%s, %s, %s, %s, %s, %s, %s)', (password, username, address, phone, email, bdate, role))
+    cursor.execute('INSERT INTO user (password, name, address, phone, email, birthdate, role)' +
+    ' VALUES (%s, %s, %s, %s, %s, %s, %s)', (password, username, address, phone, email, bdate, role))
     mydb.commit()
     return jsonify({'message': 'user registered successfully!'})
 
@@ -63,7 +64,7 @@ def orderlist():
     elif 'logged' in session.keys() and session['logged'] and session['role'] == 'user':
         user_id = request.args.get('userid')
         cursor.execute('select * from cart,orderitem Where '
-        +'cart.id=orderitem.cart_id and cart.customer_user_id = %s', (user_id,))
+        + 'cart.id=orderitem.cart_id and cart.customer_user_id = %s', (user_id,))
         orders = cursor.fetchall()
         return jsonify({'orderlist': orders})
     else:
@@ -99,15 +100,15 @@ def productcomments():
     comments = cursor.fetchall()
     return jsonify({'comments': comments})
 
-@app.route('/productlist', methods=['GET'])
-def productlist():
+@app.route('/productsales', methods=['GET'])
+def productsales():
     if 'logged' in session.keys() and session['logged'] and session['role'] == 'superuser':
         productname = request.args.get('productname')
         cursor.execute('SELECT Product_name, sum(total), sum(quantity) from orderitem,cart' +
-        'where Product_name=%s and is_paid=1 and Cart_id=cart.id and date between date_sub(now(),' +
-        'INTERVAL 1 month) and now()', (productname,))
-        productname = cursor.fetchall()
-        return jsonify({'productlist': productlist})
+        ' where Product_name = %s and is_paid = 1 and Cart_id = cart.id and date between date_sub(now(),' +
+        ' INTERVAL 1 month) and now()', (productname,))
+        productlist = cursor.fetchall()
+        return jsonify({'productsales': productlist})
     else:
         return jsonify({'message': 'You have to login first'})
 
