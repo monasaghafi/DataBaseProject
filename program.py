@@ -209,7 +209,7 @@ def editProduct_Delete():
         category = request.args.get('category', default=None)
         brand = request.args.get('brand', default=None)
         is_first = True
-        query = 'DELETE FROM user '
+        query = 'DELETE FROM Product '
         query += 'WHERE '
         if name is not None:
             query += ('name = "' + name +
