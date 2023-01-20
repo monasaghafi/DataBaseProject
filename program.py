@@ -38,17 +38,30 @@ def getCategory():
     category = cursor.fetchall()
     return jsonify({'category': category})
 
- # select * from product where discount > 14;
+ # select * from product where discount > 15;
 
 
 @app.route('/discount15%', methods=['GET'])
 def get15discount():
-    cursor.execute('select * from product where discount > 14')
-    category = cursor.fetchall()
-    return jsonify({'category': category})
+    cursor.execute('select * from product where discount > 15')
+    discount = cursor.fetchall()
+    return jsonify({'discount': discount})
+
+# select avg(total_price)from cart where
+#                         is_paid=1 and date between
+#                                     date_sub (now(), INTERVAL 1 MONTH) and now();
 
 
-################### User ###################
+@app.route('/avgSoldMonth', methods=['GET'])
+def avg_month():
+    cursor.execute(
+        'select avg(total_price)from cart where is_paid=1 and date between date_sub(now(), INTERVAL 1 MONTH) and now()')
+    avgsold_month = cursor.fetchall()
+    return jsonify({'avgsold_month': avgsold_month})
+
+################### User Functions###################
+
+
 @app.route('/users')
 def getUsers():
     if 'logged' not in session.keys() or not session['logged']:
@@ -228,10 +241,6 @@ def editProduct_Delete():
         return jsonify({'Admin Delete': 'DONE.'})
     else:
         return jsonify({'Admin Delete': 'You Do NOT have the access this page.'})
-
-
-# @app.route('/categories', methods=['GET'])
-# def avgSoldMonth():
 
 
 app.run(debug=True)
