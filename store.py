@@ -4,15 +4,20 @@ import mysql.connector
 from flask import Flask, jsonify, request, session
 
 try:
+    #connect to database
     mydb = mysql.connector.connect(host='localhost', user='root', password='alidev12345', database='mydb')
     cursor = mydb.cursor(dictionary=True)
 except:
     print('Error while connecting to MySQL!')
 
+# create new flask app
 app = Flask(__name__)
+#secret key for seesion
 app.secret_key = '4lid3v5ecr3t'
+# json pretty print with indentation
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 
+# Display the list of users
 @app.route('/users')
 def getUsers():
     if 'logged' not in session.keys() or not session['logged']:
@@ -26,6 +31,7 @@ def getUsers():
         else:
             return jsonify({'message': 'Only admins can see users info!'})
 
+# New user registration
 @app.route('/register', methods=['GET'])
 def register():
     try:
@@ -40,12 +46,14 @@ def register():
         user = cursor.fetchone()
         if user:
             return jsonify({'message': 'This username is already exists!'})
-        cursor.execute('INSERT INTO user (password, name, address, phone, email, birthdate, role) VALUES (%s, %s, %s, %s, %s, %s, %s)', (password, username, address, phone, email, bdate, role))
+        cursor.execute('INSERT INTO user (password, name, address, phone, email, birthdate, role) ' +
+            'VALUES (%s, %s, %s, %s, %s, %s, %s)', (password, username, address, phone, email, bdate, role))
         mydb.commit()
         return jsonify({'message': 'user registered successfully!'})
     except:
         return jsonify({'message': 'please enter information correctly!'})
 
+# Login
 @app.route('/login', methods=['GET'])
 def login():
     username = request.args.get('username')
@@ -60,7 +68,8 @@ def login():
         return jsonify({'message': 'Logged in successfully!'})
     else:
         return jsonify({'message': 'username or password is incorrect!'})
-    
+
+# Logout
 @app.route('/logout', methods=['GET'])
 def logout():
     if 'logged' in session.keys() and session['logged']:
@@ -69,6 +78,7 @@ def logout():
     else:
         return jsonify({'message': 'You are already logged out!'})
     
+# edit profile
 @app.route('/edit-profile', methods=['GET'])
 def editprofile():
     if 'logged' in session.keys() and session['logged']:
@@ -107,33 +117,46 @@ def editprofile():
         return jsonify({'message': 'Your info edited successfully!'})
     else:
         return jsonify({'message': 'You have to login first!'})
-    
+
+# Show 3 comments that have given the lowest score to the product
 @app.route('/three-worst-comments', methods=['GET'])
 def threeworstcomments():
     pname = request.args.get('pname')
-    cursor.execute('SELECT user.name, comment.text, comment.date, comment.rate FROM comment, user where comment.Customer_user_id = user.id and comment.Product_name = %s order by comment.rate limit 3', (pname,))
+    cursor.execute('SELECT user.name, comment.text, comment.date, comment.rate FROM comment, user ' +
+        'where comment.Customer_user_id = user.id and comment.Product_name = %s ' + 
+        'order by comment.rate limit 3', (pname,))
     comments = cursor.fetchall()
     return jsonify({'comments': comments})
 
-@app.route('/supplier-city', methods=['GET'])
+# Show suppliers related to a city
+@app.route('/same-city-supplier', methods=['GET'])
 def suppliercity():
     city = request.args.get('city')
     cursor.execute('SELECT * FROM supplier where address like %s', ("%{}%".format(city),))
     suppliers = cursor.fetchall()
     return jsonify({'suppliers': suppliers})
 
-@app.route('/most-product-last-month', methods=['GET'])
+# Display the list of the best-selling products of the month
+@app.route('/most-selling-product/last-month', methods=['GET'])
 def lastmonthproducts():
-    cursor.execute('SELECT sum(quantity), product_name FROM cart, orderitem WHERE cart.id = orderitem.cart_id and is_paid = 1 and date between date_sub(now(), INTERVAL 1 MONTH) and now() group by product_name order by sum(quantity) desc')
+    cursor.execute('SELECT sum(quantity), product_name FROM cart, orderitem ' + 
+        'WHERE cart.id = orderitem.cart_id and is_paid = 1 and ' + 
+        'date between date_sub(now(), INTERVAL 1 MONTH) and now() ' + 
+        'group by product_name order by sum(quantity) desc')
     products = cursor.fetchall()
     return jsonify({'products': products})
 
-@app.route('/most-product-last-week', methods=['GET'])
+# Display the list of the best-selling products of the week
+@app.route('/most-selling-product/last-week', methods=['GET'])
 def lastweekproducts():
-    cursor.execute('SELECT sum(quantity), product_name FROM cart, orderitem WHERE cart.id = orderitem.cart_id and is_paid = 1 and date between date_sub(now(), INTERVAL 1 WEEK) and now() group by product_name order by sum(quantity) desc')
+    cursor.execute('SELECT sum(quantity), product_name FROM cart, orderitem ' + 
+        'WHERE cart.id = orderitem.cart_id and is_paid = 1 and ' + 
+        'date between date_sub(now(), INTERVAL 1 WEEK) and now() ' + 
+        'group by product_name order by sum(quantity) desc')
     products = cursor.fetchall()
     return jsonify({'products': products})
 
+# Display the list of orders
 @app.route('/orderlist', methods=['GET'])
 def orderlist():
     if 'logged' in session.keys() and session['logged'] and session['role'] == 'superuser':
@@ -148,6 +171,7 @@ def orderlist():
     else:
         return jsonify({'message': 'You have to login first'})
 
+# Display the list of sellers of an item for the admin
 @app.route('/supplierlist', methods=['GET'])
 def supplierlist():
     if 'logged' in session.keys() and session['logged'] and session['role'] == 'superuser':
@@ -160,6 +184,7 @@ def supplierlist():
     else:
         return jsonify({'message': 'You have to login first'})
 
+# Display the last 10 orders of the user
 @app.route('/tenlastorder', methods=['GET'])
 def tenlastorder():
     if 'logged' in session.keys() and session['logged'] and session['role'] == 'superuser':
@@ -176,6 +201,7 @@ def tenlastorder():
     else:
         return jsonify({'message': 'You have to login first'})
 
+# Display product comments
 @app.route('/productcomments', methods=['GET'])
 def productcomments():
     pname = request.args.get('pname')
@@ -183,6 +209,7 @@ def productcomments():
     comments = cursor.fetchall()
     return jsonify({'comments': comments})
 
+# Display the amount of sales of a product per month for the admin
 @app.route('/productsales', methods=['GET'])
 def productsales():
     if 'logged' in session.keys() and session['logged'] and session['role'] == 'superuser':
@@ -194,7 +221,8 @@ def productsales():
         return jsonify({'productsales': productlist})
     else:
         return jsonify({'message': 'You have to login first'})
-    
+
+# Gives the last week    
 def last_week():
     today = datetime.date.today()
     out = ""
@@ -212,7 +240,7 @@ def last_week():
         out += str(int(today.day) - 7) if int(today.day) > 16 else ('0' + str(int(today.day) - 7))
     return out
 
-
+# Gives the last month 
 def last_month():
     today = datetime.date.today()
     out = ""
@@ -226,17 +254,17 @@ def last_month():
         out += str(today.day) if int(today.day) > 9 else ('0' + str(today.day))
     return out
 
-
+# Display the list of products
 @app.route('/products')
 def index_products():
     cursor.execute('select name, price, discount, category, brand from product')
     records = cursor.fetchall()
     return jsonify({'products': records})
 
-
+# Display the list of top 10 users of the month
 @app.route('/Top10Shoppers/Month')
 def index_top10shoppers_month():
-    query = 'SELECT distinct user.id, user.name, user.address, user.phone, count(user.id) as number_of_purchases '
+    query = 'SELECT distinct user.id, user.name, user.address, user.phone, count(cart.id) as number_of_purchases '
     query += 'FROM cart, user '
     query += 'WHERE cart.Customer_user_id = user.id and '
     query += 'date < "' + str(datetime.date.today()) + '" and date > "' + last_month() + '" '
@@ -247,10 +275,10 @@ def index_top10shoppers_month():
     records = cursor.fetchall()
     return jsonify({'Top 10 Shoppers Of The Month': records})
 
-
+# Display the list of top 10 users of the week
 @app.route('/Top10Shoppers/Week')
 def index_top10shoppers_week():
-    query = 'SELECT distinct user.id, user.name, user.address, user.phone, count(user.id) as number_of_purchases '
+    query = 'SELECT distinct user.id, user.name, user.address, user.phone, count(cart.id) as number_of_purchases '
     query += 'FROM cart, user '
     query += 'WHERE cart.Customer_user_id = user.id and '
     query += 'date < "' + str(datetime.date.today()) + '" and date > "' + last_week() + '" '
@@ -261,7 +289,7 @@ def index_top10shoppers_week():
     records = cursor.fetchall()
     return jsonify({'Top 10 Shoppers Of The Week': records})
 
-
+# Display the list of the cheapest sellers of items for the admin
 @app.route('/MinSale', methods=['GET'])
 def index_min_sale():
     if 'logged' in session.keys() and session['logged'] and session['role'] == 'superuser':
@@ -269,14 +297,15 @@ def index_min_sale():
         query = 'SELECT product.name, product.price, product.brand, '
         query += 'supplier.id, supplier.name, supplier.phone, Min(product.price) '
         query += 'FROM supplier, supplierproduct, product '
-        query += 'WHERE Supplier_id = supplier.id AND Product_name = product.name AND product.name LIKE %s'
-        cursor.execute(query, ("{}%".format(pname),))
+        query += 'WHERE Supplier_id = supplier.id AND Product_name = product.name AND product.name = %s '
+        query += 'HAVING product.price = Min(product.price)'
+        cursor.execute(query, (pname,))
         records = cursor.fetchall()
         return jsonify({'MinSale': records})
     else:
         return jsonify({'error': 'You Do NOT have the access this page.'})
 
-
+# Show 3 comments that gave the best score to the product
 @app.route('/Top3Comments', methods=['GET'])
 def index_top3comments():
     pname = request.args.get('pname')
@@ -289,8 +318,8 @@ def index_top3comments():
     records = cursor.fetchall()
     return jsonify({'Top 3 Comments': records})
 
-
-@app.route('/SameCity', methods=['GET'])
+# Show users related to a city
+@app.route('/Same-City-User', methods=['GET'])
 def index_same_city():
     city = request.args.get('city')
     query = 'SELECT id, name, address, phone, email, birthdate '
@@ -300,7 +329,7 @@ def index_same_city():
     records = cursor.fetchall()
     return jsonify({'Users In Same City': records})
 
-
+# Delete user by admin
 @app.route('/UserEdit/Delete', methods=['GET'])
 def index_edit_delete():
     try:
@@ -347,7 +376,7 @@ def index_edit_delete():
     except:
         return jsonify({'message': 'Please enter correct info!'})
 
-
+# Edit user by admin
 @app.route('/UserEdit/Update', methods=['GET'])
 def index_edit_update():
     try:
@@ -390,7 +419,7 @@ def index_edit_update():
     except:
         return jsonify({'message': 'Please enter correct info!'})
 
-
+# Add user by admin
 @app.route('/UserEdit/Add', methods=['GET'])
 def index_edit_add():
     try:
@@ -433,6 +462,7 @@ def index_edit_add():
     except:
         return jsonify({'message': 'Please enter correct info!'})
     
+# Edit product by admin     
 @app.route('/ProductEdit/Update', methods=['GET'])  # update
 def editProduct_Update():
     try:
@@ -481,7 +511,7 @@ def editProduct_Update():
     except:
         return jsonify({'message': 'Please enter correct info!'})
 
-
+# Add product by admin
 @app.route('/ProductEdit/Add', methods=['GET'])  # add
 def editProduct_Add():
     try:
@@ -517,8 +547,7 @@ def editProduct_Add():
     except:
         return jsonify({'message': 'Please enter correct info!'})    
     
-
-
+# Delete product by admin
 @app.route('/ProductEdit/Delete', methods=['GET'])
 def editProduct_Delete():
     try:
@@ -571,24 +600,26 @@ def editProduct_Delete():
     except:
         return jsonify({'message': 'Please enter correct info!'})
     
+# Display the list of product categories    
 @app.route('/categories', methods=['GET'])
 def getCategory():
     cursor.execute('select distinct category from product')
     category = cursor.fetchall()
     return jsonify({'category': category})
 
-
+# Show the list of special offers (products with a discount of more than 15%)
 @app.route('/discount15%', methods=['GET'])
 def get15discount():
     cursor.execute('select * from product where discount > 15')
     discount = cursor.fetchall()
     return jsonify({'discount': discount})
 
+# Show average store sales per month for admin
 @app.route('/avgSoldMonth', methods=['GET'])
 def avg_month():
-    cursor.execute(
-        'select avg(total_price) from cart where is_paid=1 and date between date_sub(now(), INTERVAL 1 MONTH) and now()')
+    cursor.execute('select avg(total_price) from cart where is_paid=1 and date between date_sub(now(), INTERVAL 1 MONTH) and now()')
     avgsold_month = cursor.fetchall()
     return jsonify({'avgsold_month': avgsold_month})
 
+# run flask app in debug mode
 app.run(debug=True)
