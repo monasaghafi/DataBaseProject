@@ -617,7 +617,8 @@ def get15discount():
 # Show average store sales per month for admin
 @app.route('/avgSoldMonth', methods=['GET'])
 def avg_month():
-    cursor.execute('select avg(total_price) from cart where is_paid=1 and date between date_sub(now(), INTERVAL 1 MONTH) and now()')
+    cursor.execute('select avg(total_price) from cart ' + 
+        'where is_paid=1 and date between date_sub(now(), INTERVAL 1 MONTH) and now()')
     avgsold_month = cursor.fetchall()
     return jsonify({'avgsold_month': avgsold_month})
 
