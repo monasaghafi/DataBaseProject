@@ -5,7 +5,7 @@ from flask import Flask, jsonify, request, session
 
 try:
     #connect to database
-    mydb = mysql.connector.connect(host='localhost', user='root', password='alidev12345', database='mydb')
+    mydb = mysql.connector.connect(host='localhost', user='root', password='9718', database='mydb')
     cursor = mydb.cursor(dictionary=True)
 except:
     print('Error while connecting to MySQL!')
